@@ -1,21 +1,9 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include <JuceHeader.h>
 #include "CircularBuffer.h"
 
 //==============================================================================
-/**
-*/
 class DrumAudioProcessor  : public AudioProcessor
 {
 public:
@@ -80,15 +68,18 @@ public:
 	AudioProcessorValueTreeState tree;
 
 private:
-	//Declares a processor that is duplicated across both channels so it can be mono and stereo (in this case a filter)
+	//TODO: Make a list of constants
+
+	//Declares a processor that is duplicated across both channels so it can be mono and stereo
 	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> highpassFilter;
 	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> lowpassFilter;
 	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> highShelf;
 	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> midCut;
-
+	
 	dsp::NoiseGate<float> noiseGate;
-
+	
 	CircularBuffer circularBuffer;
+	
 	float compGain, tav, rms;
 
     //==============================================================================

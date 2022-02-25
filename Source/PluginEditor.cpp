@@ -1,13 +1,3 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <iostream>
@@ -96,7 +86,7 @@ DrumAudioProcessorEditor::~DrumAudioProcessorEditor()
 	setLookAndFeel(nullptr);
 }
 
-//MY FUNCTIONS
+//MY FUNCTIONS==================================================================
 void DrumAudioProcessorEditor::sliderValueChanged(Slider *slider)
 {
 	if (slider == &gainSlider) processor.rawVolume = pow(10, gainSlider.getValue() / 20);
@@ -137,14 +127,12 @@ void DrumAudioProcessorEditor::buttonClicked(Button* button)
 		{
 			midCutButton.onClick = [this]() { processor.doMidCut = true; };
 			midCutButton.setButtonText("l");
-			//button->setColour(TextButton::buttonColourId, Colours::white);
 		}
 		
 		if (processor.doMidCut == true)
 		{
 			midCutButton.onClick = [this]() { processor.doMidCut = false; };
 			midCutButton.setButtonText("0");
-			//button->setColour(TextButton::buttonColourId, Colours::grey);
 		}
 	}
 }
@@ -152,28 +140,15 @@ void DrumAudioProcessorEditor::buttonClicked(Button* button)
 //==============================================================================
 void DrumAudioProcessorEditor::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    //g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
 	int boxPosY = 140;
 
 	g.fillAll(Colours::black);
-
 	g.setColour(Colours::grey);
 
 	g.drawRoundedRectangle(10, 10, 365, 120, 10, 2);
 	g.drawRoundedRectangle(10, boxPosY + 10, 185, 120, 10, 2);
 	g.drawRoundedRectangle(10, boxPosY * 2 + 10, 365, 120, 10, 2);
 	g.drawRoundedRectangle(190, boxPosY * 3 + 10, 185, 120, 10, 2);
-	
-	/*g.fillRect(25.0f, 27.0f, dividerWidth, 1.0f);
-	g.fillRect(25.0f, dividerPosY + 27, dividerWidth, 1.0f);
-	g.fillRect(25.0f, dividerPosY * 2 + 27, dividerWidth, 1.0f);
-	g.fillRect(25.0f, dividerPosY * 3 + 27, dividerWidth, 1.0f);*/
-
-	/*File f = "";
-	Image background = ImageFileFormat::loadFrom(f);
-	g.drawImageWithin(background, 0, 0, 500, 400, RectanglePlacement::centred);*/
 }
 
 void DrumAudioProcessorEditor::resized()
