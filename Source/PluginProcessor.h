@@ -1,7 +1,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "CircularBuffer.h"
+#include "Compressor.h"
+#include "Constants.h"
 
 //==============================================================================
 class DrumAudioProcessor  : public AudioProcessor
@@ -42,45 +43,41 @@ public:
 
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
-	
-	//Functions
-	float compressSample(float data, float thresh, float ratio, float attack, float release);
-	
-	void updateFilters();
-	void updateCompressor();
-	void updateNoiseGate();
+    void setStateInformation (const void* data, int sizeInBytes) override;	
 
-	//Variables
+    //==============================================================================
+    inline float dBtoRatio(float dBvalue) { return pow(10, dBvalue / 20); }
+
 	float lastSampleRate;
-	float sliderInterval = 0.01f;
-	
+    float drive;
 	double rawVolume;
-	float drive;
-
-	float threshold;
-	float ratio;
-	float attack;
-	float release;
-
 	bool doMidCut = false;
 	
 	AudioProcessorValueTreeState tree;
 
 private:
-	//TODO: Make a list of constants
+    void updateFilters();
+    void updateCompressor();
+    void updateNoiseGate();
+    
+    inline float calcCompCoeff(float compControl)
+    {
+        return (1 - std::pow(MathConstants<float>::euler, 
+            ((1 / getSampleRate()) * -2.2f) / (compControl / 1000.0f)));
+    }
 
-	//Declares a processor that is duplicated across both channels so it can be mono and stereo
-	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> highpassFilter;
-	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> lowpassFilter;
-	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> highShelf;
-	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> midCut;
-	
-	dsp::NoiseGate<float> noiseGate;
-	
-	CircularBuffer circularBuffer;
-	
-	float compGain, tav, rms;
+    float threshold, ratio, attack, release;
+
+	// Declares a processor that can be duplicated across two channels for stereo processing
+	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>>
+		highpassFilter,
+		lowpassFilter,
+		highShelf,
+		midCut;
+
+	dsp::NoiseGate<float> noiseGate; // TODO: Use ProcessorDuplicator to process stereo
+
+    Compressor compressor; // TODO: Make an array of compressors to process stereo
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumAudioProcessor)

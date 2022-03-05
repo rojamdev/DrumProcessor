@@ -32,7 +32,8 @@ void CustomLookAndFeel::drawRotarySlider(Graphics& g, int x, int y, int width, i
 	g.fillPath(dot);
 }
 
-void CustomLookAndFeel::drawButtonBackground(Graphics& g, Button& button, const Colour& backgroundColour, bool, bool isButtonDown)
+void CustomLookAndFeel::drawButtonBackground(Graphics& g, Button& button, 
+	const Colour& backgroundColour, bool, bool isButtonDown)
 {
 	Rectangle<int> buttonArea = button.getLocalBounds();
 	g.setColour(Colours::grey);

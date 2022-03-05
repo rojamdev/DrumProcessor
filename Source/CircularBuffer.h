@@ -15,7 +15,7 @@ class CircularBuffer {
 
 public:
 	CircularBuffer();
-	CircularBuffer(int bufferSize, int delayLength);	
+	CircularBuffer(int bufferSize, int delayLength);
 	float getData();
 	void setData(float data);
 	void nextSample();

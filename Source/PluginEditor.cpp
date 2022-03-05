@@ -2,53 +2,55 @@
 #include "PluginEditor.h"
 #include <iostream>
 
+using namespace constants;
+
 //==============================================================================
 DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (415, 565);
+    setSize (GUI_SIZE_X, GUI_SIZE_Y);
 	setLookAndFeel(&customLookAndFeel);
 	defaultFont.setBold(true);
 
-	//Utility
-	createSlider(gainSlider, -48.0f, 24.0f, 0.0f);
-	createSlider(driveSlider, 1.0f, 100.0f, 1.0f);
+	// Utility
+	createSlider(gainSlider, GAIN_MIN, GAIN_MAX, GAIN_DEFAULT);
+	createSlider(driveSlider, DRIVE_MIN, DRIVE_MAX, DRIVE_DEFAULT);
 
 	createLabel(gainLabel, "Gain");
 	createLabel(driveLabel, "Drive");
 
-	//EQ
-	createSlider(highpassSlider, 20.0f, 20000.0f, 20.0f);
-	createSlider(lowpassSlider, 20.0f, 20000.0f, 20000.0f);
-	createSlider(highShelfGainSlider, -12.0f, 12.0f, 0.0f);
-	createSlider(midCutFreqSlider, 20.0f, 1000.0f, 200.0f);
+	// EQ
+	createSlider(highpassSlider, HPF_MIN, HPF_MAX, HPF_DEFAULT);
+	createSlider(lowpassSlider, LPF_MIN, LPF_MAX, LPF_DEFAULT);
+	createSlider(highShelfGainSlider, HI_SHELF_MIN, HI_SHELF_MAX, HI_SHELF_DEFAULT);
+	createSlider(midCutFreqSlider, MID_CUT_MIN, MID_CUT_MAX, MID_CUT_DEFAULT);
 
 	createLabel(highpassLabel, "Highpass");
 	createLabel(lowpassLabel, "Lowpass");
 	createLabel(highShelfGainLabel, "Air");
 	createLabel(midCutFreqLabel, "Midcut");
 
-	//Compression
-	createSlider(thresholdSlider, -48.0f, 0.0f, 0.0f);
-	createSlider(ratioSlider, 1.0f, 10.0f, 1.0f);
-	createSlider(attackSlider, 0.01f, 500.0f, 100.0f);
-	createSlider(releaseSlider, 0.01f, 2000.0f, 500.0f);
+	// Compression
+	createSlider(thresholdSlider, COMP_THRESH_MIN, COMP_THRESH_MAX, COMP_THRESH_DEFAULT);
+	createSlider(ratioSlider, COMP_RATIO_MIN, COMP_RATIO_MAX, COMP_RATIO_DEFAULT);
+	createSlider(attackSlider, COMP_ATTACK_MIN, COMP_ATTACK_MAX, COMP_ATTACK_DEFAULT);
+	createSlider(releaseSlider, COMP_REL_MIN, COMP_REL_MAX, COMP_REL_DEFAULT);
 
-	createLabel(thresholdLabel, "Threshold");
+	createLabel(thresholdLabel, "Thresh");
 	createLabel(ratioLabel, "Ratio");
 	createLabel(attackLabel, "Attack");
 	createLabel(releaseLabel, "Release");
 
-	//Gate
-	createSlider(gateThreshSlider, -100.0f, 0.0f, -100.0f);
-	createSlider(gateReleaseSlider, 50.0f, 5000.0f, 1000.0f);
+	// Gate
+	createSlider(gateThreshSlider, GATE_THRESH_MIN, GATE_THRESH_MAX, GATE_THRESH_DEFAULT);
+	createSlider(gateReleaseSlider, GATE_REL_MIN, GATE_REL_MAX, GATE_REL_DEFAULT);
 
 	createLabel(gateThreshLabel, "Thresh");
 	createLabel(gateReleaseLabel, "Release");
 
-	//Group labels
+	// Group labels
 	createLabel(eqLabel, "EQ");
 	createLabel(gateLabel, "GATE");
 	createLabel(compLabel, "COMP");
@@ -59,23 +61,23 @@ DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
 	compLabel.setJustificationType(Justification::verticallyCentred);
 	utilityLabel.setJustificationType(Justification::verticallyCentred);
 
-	//TREE PARAMETERS
-	driveValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "drive", driveSlider);
+	// Tree parameters
+	driveValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, DRIVE_ID, driveSlider);
 	
-	highpassValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "highpassCutoff", highpassSlider);
-	lowpassValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "lowpassCutoff", lowpassSlider);
-	highShelfGainValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "highShelfGain", highShelfGainSlider);
-	midCutFreqValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "midCutFreq", midCutFreqSlider);
+	highpassValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, HPF_ID, highpassSlider);
+	lowpassValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, LPF_ID, lowpassSlider);
+	highShelfGainValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, HI_SHELF_ID, highShelfGainSlider);
+	midCutFreqValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, MID_CUT_ID, midCutFreqSlider);
 	
-	thresholdValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "threshold", thresholdSlider);
-	ratioValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "ratio", ratioSlider);
-	attackValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "attack", attackSlider);
-	releaseValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "release", releaseSlider);
+	thresholdValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, COMP_THRESH_ID, thresholdSlider);
+	ratioValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, COMP_RATIO_ID, ratioSlider);
+	attackValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, COMP_ATTACK_ID, attackSlider);
+	releaseValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, COMP_REL_ID, releaseSlider);
 
-	gateThreshValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "gateThresh", gateThreshSlider);
-	gateReleaseValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, "gateRelease", gateReleaseSlider);
+	gateThreshValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, GATE_THRESH_ID, gateThreshSlider);
+	gateReleaseValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, GATE_REL_ID, gateReleaseSlider);
 
-	//Buttons
+	// Buttons
 	midCutButton.setToggleState(true, NotificationType::dontSendNotification);
 	midCutButton.addListener(this);
 	addAndMakeVisible(midCutButton);
@@ -86,10 +88,15 @@ DrumAudioProcessorEditor::~DrumAudioProcessorEditor()
 	setLookAndFeel(nullptr);
 }
 
-//MY FUNCTIONS==================================================================
-void DrumAudioProcessorEditor::sliderValueChanged(Slider *slider)
+// MY FUNCTIONS ================================================================
+void DrumAudioProcessorEditor::sliderValueChanged(Slider *slider) 
+//TODO: CHANGE THIS INTO A TREE SLIDER ATTACHMENT LIKE OTHER SLIDERS
 {
-	if (slider == &gainSlider) processor.rawVolume = pow(10, gainSlider.getValue() / 20);
+	//if (slider == &gainSlider) processor.rawVolume = pow(10, gainSlider.getValue() / 20);
+	if (slider == &gainSlider)
+	{
+		processor.rawVolume = processor.dBtoRatio(gainSlider.getValue());
+	}
 }
 
 void DrumAudioProcessorEditor::createSlider(Slider& slider, float min, float max, float value)
@@ -97,7 +104,7 @@ void DrumAudioProcessorEditor::createSlider(Slider& slider, float min, float max
 	slider.setSliderStyle(Slider::SliderStyle::Rotary);
 	slider.setTextBoxStyle(Slider::TextBoxBelow, false, 70, 15);
 	slider.setColour(Slider::textBoxOutlineColourId, Colours::transparentBlack);
-	slider.setRange(min, max, processor.sliderInterval);
+	slider.setRange(min, max, SLIDER_INTERVAL);
 	slider.setValue(value);
 	slider.addListener(this);
 	addAndMakeVisible(&slider);
@@ -120,8 +127,9 @@ void DrumAudioProcessorEditor::createLabel(Label& label, String text)
 }
 
 void DrumAudioProcessorEditor::buttonClicked(Button* button)
+// TODO: Fix this section
 {	
-	if (button == &midCutButton) 
+	/*if (button == &midCutButton)
 	{
 		if (processor.doMidCut == false)
 		{
@@ -134,13 +142,20 @@ void DrumAudioProcessorEditor::buttonClicked(Button* button)
 			midCutButton.onClick = [this]() { processor.doMidCut = false; };
 			midCutButton.setButtonText("0");
 		}
+	}*/
+
+	if (button == &midCutButton)
+	{
+		midCutButton.onClick = [this]() { processor.doMidCut = !processor.doMidCut; };
 	}
 }
+
+// TODO: Add more constants in the methods below
 
 //==============================================================================
 void DrumAudioProcessorEditor::paint (Graphics& g)
 {
-	int boxPosY = 140;
+	const int boxPosY = 140;
 
 	g.fillAll(Colours::black);
 	g.setColour(Colours::grey);
@@ -156,17 +171,18 @@ void DrumAudioProcessorEditor::resized()
 	// This is generally where you'll want to lay out the positions of any
 	// subcomponents in your editor..
 
-	const int knobSize = 90;
-	const int knobPosX = 90;
-	const int knobPosY = 140;
+	const int
+		knobSize = 90,
+		knobPosX = 90,
+		knobPosY = 140,
 	
-	const int shiftX = 5;
-	const int shiftY = 10;
+		shiftX = 5,
+		shiftY = 10,
 
-	const int labelX = 70;
-	const int labelY = 20;
+		labelX = 70,
+		labelY = 20;
 
-	//EQ
+	// EQ
 	highpassSlider.setBounds(0 + shiftX, shiftY, knobSize, knobSize);
 	lowpassSlider.setBounds(knobPosX + shiftX, shiftY, knobSize, knobSize);
 	highShelfGainSlider.setBounds(knobPosX * 2 + shiftX, shiftY, knobSize, knobSize);
@@ -179,14 +195,14 @@ void DrumAudioProcessorEditor::resized()
 
 	midCutButton.setBounds(335, 10, 40, 40);
 
-	//Gate
+	// Gate
 	gateThreshSlider.setBounds(0 + shiftX, knobPosY + shiftY, knobSize, knobSize);
 	gateReleaseSlider.setBounds(knobPosX + shiftX, knobPosY + shiftY, knobSize, knobSize);
 
 	gateThreshLabel.setBounds(10 + shiftX, knobPosY + shiftY + knobSize, labelX, labelY);
 	gateReleaseLabel.setBounds(knobPosX + 10 + shiftX, knobPosY + shiftY + knobSize, labelX, labelY);
 
-	//Compression
+	// Compression
 	thresholdSlider.setBounds(0 + shiftX, knobPosY * 2 + shiftY, knobSize, knobSize);
 	ratioSlider.setBounds(knobPosX + shiftX, knobPosY * 2 + shiftY, knobSize, knobSize);
 	attackSlider.setBounds(knobPosX * 2 + shiftX, knobPosY * 2 + shiftY, knobSize, knobSize);
@@ -197,14 +213,14 @@ void DrumAudioProcessorEditor::resized()
 	attackLabel.setBounds(knobPosX * 2 + 10 + shiftX, knobPosY * 2 + shiftY + knobSize, labelX, labelY);
 	releaseLabel.setBounds(knobPosX * 3 + 10 + shiftX, knobPosY * 2 + shiftY + knobSize, labelX, labelY);
 
-	//Utility
+	// Utility
 	gainSlider.setBounds(knobPosX * 3 + shiftX, knobPosY * 3 + shiftY, knobSize, knobSize);
 	driveSlider.setBounds(knobPosX * 2 + shiftX, knobPosY * 3 + shiftY, knobSize, knobSize);
 
 	gainLabel.setBounds(knobPosX * 3 + 10 + shiftX, knobPosY * 3 + shiftY + knobSize, labelX, labelY);
 	driveLabel.setBounds(knobPosX * 2 + 10 + shiftX, knobPosY * 3 + shiftY + knobSize, labelX, labelY);
 
-	//Group Labels
+	// Group Labels
 	eqLabel.setBounds(365.0f, 60.0f, 50, 20);
 	gateLabel.setBounds(180.0f, 60.0f + knobPosY , 50, 20);
 	compLabel.setBounds(360.0f, 60.0f + knobPosY * 2, 50, 20);

@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using namespace constants;
+
 //==============================================================================
 DrumAudioProcessor::DrumAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -15,56 +17,46 @@ DrumAudioProcessor::DrumAudioProcessor()
 #else
 	:
 #endif
-	tree(*this, nullptr), 
-		highpassFilter(dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, 20.0f, 0.02f)), 
-		lowpassFilter(dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, 20000.0f, 0.02f)),
-		highShelf(dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, 5000.0f, 0.02f, 10.0f)),
-		midCut(dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, 250.0f, 8.0f)),
-		noiseGate()
+	tree(*this, nullptr),
+	highpassFilter(dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, HPF_DEFAULT, HPF_Q)), 
+	lowpassFilter(dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, LPF_DEFAULT, LPF_Q)),
+	highShelf(dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, HI_SHELF_CUTOFF, HI_SHELF_Q, 1.0f)), //TODO: Use dBtoRatio for 1.0f
+	midCut(dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, MID_CUT_DEFAULT, MID_CUT_Q)),
+	noiseGate()
 {
-	//UTILITY
-	NormalisableRange<float> driveRange(1.0f, 100.0f, sliderInterval);
-	tree.createAndAddParameter("drive", "Drive", "drive", driveRange, 1.0f, nullptr, nullptr);
-		
-	//EQ
-	NormalisableRange<float> highpassCutoffRange(20.0f, 20000.0f, sliderInterval);
-	highpassCutoffRange.setSkewForCentre(500.f);
-	tree.createAndAddParameter("highpassCutoff", "HighpassCutoff", "highpassCutoff", highpassCutoffRange, 20.0f, nullptr, nullptr);
+	// UTILITY
+	NormalisableRange<float>
+		driveRange(DRIVE_MIN, DRIVE_MAX, SLIDER_INTERVAL),
+		highpassCutoffRange(HPF_MIN, HPF_MAX, SLIDER_INTERVAL),
+		lowpassCutoffRange(LPF_MIN, LPF_MAX, SLIDER_INTERVAL),
+		highShelfGainRange(HI_SHELF_MIN, HI_SHELF_MAX, SLIDER_INTERVAL),
+		midCutFreqRange(MID_CUT_MIN, MID_CUT_MAX, SLIDER_INTERVAL),
+		thresholdRange(COMP_THRESH_MIN, COMP_THRESH_MAX, SLIDER_INTERVAL),
+		ratioRange(COMP_RATIO_MIN, COMP_RATIO_MAX, SLIDER_INTERVAL),
+		attackRange(COMP_ATTACK_MIN, COMP_ATTACK_MAX, SLIDER_INTERVAL),
+		releaseRange(COMP_REL_MIN, COMP_REL_MAX, SLIDER_INTERVAL),
+		gateThreshRange(GATE_THRESH_MIN, GATE_THRESH_MAX, SLIDER_INTERVAL),
+		gateReleaseRange(GATE_REL_MIN, GATE_REL_MAX, SLIDER_INTERVAL);
 
-	NormalisableRange<float> lowpassCutoffRange(20.0f, 20000.0f, sliderInterval);
-	lowpassCutoffRange.setSkewForCentre(500.f);
-	tree.createAndAddParameter("lowpassCutoff", "LowpassCutoff", "lowpassCutoff", lowpassCutoffRange, 20000.0f, nullptr, nullptr);
+	highpassCutoffRange.setSkewForCentre(HPF_CENTRE);
+	lowpassCutoffRange.setSkewForCentre(LPF_CENTRE);
+	midCutFreqRange.setSkewForCentre(MID_CUT_CENTRE);
+	ratioRange.setSkewForCentre(COMP_RATIO_CENTRE);
+	attackRange.setSkewForCentre(COMP_ATTACK_CENTRE);
+	releaseRange.setSkewForCentre(COMP_REL_CENTRE);
+	gateReleaseRange.setSkewForCentre(GATE_REL_CENTRE);
 
-	NormalisableRange<float> highShelfGainRange(-12.0f, 12.0f, sliderInterval);
-	tree.createAndAddParameter("highShelfGain", "HighShelfGain", "highShelfGain", highShelfGainRange, 0.0f, nullptr, nullptr);
-
-	NormalisableRange<float> midCutFreqRange(20.0f, 1000.0f, sliderInterval);
-	midCutFreqRange.setSkewForCentre(300.f);
-	tree.createAndAddParameter("midCutFreq", "MidCutFreq", "midCutFreq", midCutFreqRange, 300.0f, nullptr, nullptr);
-
-	//COMPRESSOR
-	NormalisableRange<float> thresholdRange(-48.0f, 0.0f, sliderInterval);
-	tree.createAndAddParameter("threshold", "Threshold", "threshold", thresholdRange, 0.0f, nullptr, nullptr);
-
-	NormalisableRange<float> ratioRange(1.0f, 10.0f, sliderInterval);
-	ratioRange.setSkewForCentre(3.0f);
-	tree.createAndAddParameter("ratio", "Ratio", "ratio", ratioRange, 1.0f, nullptr, nullptr);
-
-	NormalisableRange<float> attackRange(0.01f, 500.0f, sliderInterval);
-	attackRange.setSkewForCentre(100.0f);
-	tree.createAndAddParameter("attack", "Attack", "attack", attackRange, 100.0f, nullptr, nullptr);
-
-	NormalisableRange<float> releaseRange(0.01f, 2000.0f, sliderInterval);
-	releaseRange.setSkewForCentre(500.0f);
-	tree.createAndAddParameter("release", "Release", "release", releaseRange, 500.0f, nullptr, nullptr);
-
-	//NOISE GATE
-	NormalisableRange<float> gateThreshRange(-100.0f, 0.0f, sliderInterval);
-	tree.createAndAddParameter("gateThresh", "GateThreshold", "gateThresh", gateThreshRange, -100.0f, nullptr, nullptr);
-
-	NormalisableRange<float> gateReleaseRange(50.0f, 5000.0f, sliderInterval);
-	gateReleaseRange.setSkewForCentre(1000.0f);
-	tree.createAndAddParameter("gateRelease", "GateRelease", "gateRelease", gateReleaseRange, 1000.0f, nullptr, nullptr);
+	tree.createAndAddParameter(DRIVE_ID, "Drive", "drive", driveRange, DRIVE_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(HPF_ID, "HighpassCutoff", "Hz", highpassCutoffRange, HPF_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(LPF_ID, "LowpassCutoff", "Hz", lowpassCutoffRange, LPF_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(HI_SHELF_ID, "HighShelfGain", "dB", highShelfGainRange, HI_SHELF_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(MID_CUT_ID, "MidCutFreq", "dB", midCutFreqRange, MID_CUT_CENTRE, nullptr, nullptr);
+	tree.createAndAddParameter(COMP_THRESH_ID, "Threshold", "dB", thresholdRange, COMP_THRESH_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(COMP_RATIO_ID, "Ratio", ":1", ratioRange, COMP_RATIO_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(COMP_ATTACK_ID, "Attack", "ms", attackRange, COMP_ATTACK_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(COMP_REL_ID, "Release", "ms", releaseRange, COMP_REL_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(GATE_THRESH_ID, "GateThreshold", "dB", gateThreshRange, GATE_THRESH_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(GATE_REL_ID, "GateRelease", "ms", gateReleaseRange, GATE_REL_DEFAULT, nullptr, nullptr);
 }
 
 DrumAudioProcessor::~DrumAudioProcessor()
@@ -142,35 +134,26 @@ void DrumAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 	lastSampleRate = sampleRate;
 	rawVolume = 1.0f;
 
-	//Compressor
-	circularBuffer = CircularBuffer(150, 20);
-	compGain = 1.0f;
-	tav = 0.01f;
-	rms = 0.0f;
-
-	//DSP
+	// DSP
 	dsp::ProcessSpec spec;
 	spec.sampleRate = sampleRate;
 	spec.maximumBlockSize = samplesPerBlock;
 	spec.numChannels = getMainBusNumOutputChannels();
 
-	//EQ
+	// EQ
 	highpassFilter.prepare(spec);
 	highpassFilter.reset();
-
 	lowpassFilter.prepare(spec);
 	lowpassFilter.reset();
-
 	highShelf.prepare(spec);
 	highShelf.reset();
-
 	midCut.prepare(spec);
 	midCut.reset();
 
-	//Noise Gate
+	// Noise Gate
 	noiseGate.prepare(spec);
 	noiseGate.reset();
-	noiseGate.setRatio(100.0f);
+	noiseGate.setRatio(GATE_RATIO);
 }
 
 void DrumAudioProcessor::releaseResources()
@@ -207,14 +190,13 @@ void DrumAudioProcessor::updateFilters()
 {	
 	float highpassFreq = *tree.getRawParameterValue("highpassCutoff");
 	float lowpassFreq = *tree.getRawParameterValue("lowpassCutoff");
-	float highShelfGain = pow(10, *tree.getRawParameterValue("highShelfGain") / 20);
+	float highShelfGain = dBtoRatio(*tree.getRawParameterValue("highShelfGain"));
 	float midCutFreq = *tree.getRawParameterValue("midCutFreq");
 
 	*highpassFilter.state = *dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, highpassFreq);
 	*lowpassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, lowpassFreq);
-	
-	*highShelf.state = *dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, 5000.0f, 1.0f, highShelfGain);
-	*midCut.state = *dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, midCutFreq, 1.0f);
+	*highShelf.state = *dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, HI_SHELF_CUTOFF, HI_SHELF_Q, highShelfGain);
+	*midCut.state = *dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, midCutFreq, MID_CUT_Q);
 }
 
 void DrumAudioProcessor::updateCompressor()
@@ -229,27 +211,6 @@ void DrumAudioProcessor::updateNoiseGate()
 {
 	noiseGate.setThreshold(*tree.getRawParameterValue("gateThresh"));
 	noiseGate.setRelease(*tree.getRawParameterValue("gateRelease"));
-}
-
-float DrumAudioProcessor::compressSample(float data, float thresh, float ratio, float attack, float release)
-{
-	rms = (1 - tav) * rms + tav * std::pow(data, 2.0f);
-	float dbRMS = 10 * std::log10(rms);
-
-	float slope = 1 - (1 / ratio);
-	float dbGain = std::min(0.0f, (slope * (thresh - dbRMS)));
-	float newGain = std::pow(10, dbGain / 20);
-
-	float coeff;
-	if (newGain < compGain) coeff = attack;
-	else coeff = release;
-	compGain = (1 - coeff) * compGain + coeff * newGain;
-
-	float compressedSample = compGain * circularBuffer.getData();
-	circularBuffer.setData(data);
-	circularBuffer.nextSample();
-	
-	return compressedSample;
 }
 
 void DrumAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
@@ -270,20 +231,20 @@ void DrumAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& m
 	dsp::AudioBlock<float> block(buffer);
 
 	updateFilters();
+	updateCompressor();
+	updateNoiseGate();
 
 	highpassFilter.process(dsp::ProcessContextReplacing<float>(block));
 	lowpassFilter.process(dsp::ProcessContextReplacing<float>(block));
 	highShelf.process(dsp::ProcessContextReplacing<float>(block));
+
 	if (doMidCut == true) midCut.process(dsp::ProcessContextReplacing<float>(block));
 
-	updateCompressor();
-
-	float attackCoeff = 1 - std::pow(MathConstants<float>::euler, ((1 / getSampleRate()) * -2.2f) / (attack / 1000.0f));
-	float releaseCoeff = 1 - std::pow(MathConstants<float>::euler, ((1 / getSampleRate()) * -2.2f) / (release / 1000.0f));
+	float attackCoeff = calcCompCoeff(attack);
+	float releaseCoeff = calcCompCoeff(release);
 
 	drive = *tree.getRawParameterValue("drive");
-
-	updateNoiseGate();
+	
 	noiseGate.process(dsp::ProcessContextReplacing<float>(block));
 
     // This is the place where you'd normally do the guts of your plugin's
@@ -300,9 +261,8 @@ void DrumAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& m
 			auto* channelData = buffer.getWritePointer(channel);
 			
 			channelData[sample] = buffer.getSample(channel, sample);
-			channelData[sample] = compressSample(channelData[sample], threshold, ratio, attackCoeff, releaseCoeff);
-			channelData[sample] = ((2 / float_Pi) * atan(drive * channelData[sample])) / drive;
-
+			channelData[sample] = compressor.compressSample(channelData[sample], threshold, ratio, attackCoeff, releaseCoeff);
+			channelData[sample] = atan(drive * channelData[sample]) / drive;
 			channelData[sample] *= rawVolume;
 		}
 	}

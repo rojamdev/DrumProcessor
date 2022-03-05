@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "CustomLookAndFeel.h"
+#include "Constants.h"
 
 //==============================================================================
 class DrumAudioProcessorEditor  : public AudioProcessorEditor, public Slider::Listener, public Button::Listener
@@ -22,29 +23,33 @@ public:
 	void buttonClicked(Button* button) override;
 
 private:
+	// GUI
+	const float
+		GUI_SIZE_X = 415,
+		GUI_SIZE_Y = 565;
 
-	//Utility
+	// Utility
 	Slider gainSlider, driveSlider;
 	Label gainLabel, driveLabel;
 	
-	//EQ
+	// EQ
 	Slider highpassSlider, lowpassSlider, highShelfGainSlider, midCutFreqSlider;
 	Label highpassLabel, lowpassLabel, highShelfGainLabel, midCutFreqLabel;
-	TextButton midCutButton{ "O" };
+	TextButton midCutButton{ "O" }; // TODO: Replace mid cut with power/beef control
 	
-	//Compression
+	// Compression
 	Slider thresholdSlider, ratioSlider, attackSlider, releaseSlider;
 
 	Label thresholdLabel, ratioLabel, attackLabel, releaseLabel;
 
-	//Noise Gate
+	// Noise Gate
 	Slider gateThreshSlider, gateReleaseSlider;
 	Label gateThreshLabel, gateReleaseLabel;
 
-	//Group labels
+	// Group labels
 	Label eqLabel, gateLabel, compLabel, utilityLabel; 
 
-	//Tree slider attachments
+	// Tree slider attachments
 	ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> driveValue, highpassValue, lowpassValue, highShelfGainValue, 
 		midCutFreqValue, thresholdValue, ratioValue, attackValue, releaseValue, gateThreshValue, gateReleaseValue;
 

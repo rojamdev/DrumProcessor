@@ -4,6 +4,9 @@
               displaySplashScreen="1" companyName="RojamDSP" jucerFormatVersion="1">
   <MAINGROUP id="jpdjQb" name="DrumProcessor">
     <GROUP id="{E96AFD82-2098-FE6C-0A5B-208FB048ACF6}" name="Source">
+      <FILE id="qdh4Ep" name="Constants.h" compile="0" resource="0" file="Source/Constants.h"/>
+      <FILE id="wqmMQk" name="Compressor.cpp" compile="1" resource="0" file="Source/Compressor.cpp"/>
+      <FILE id="GC4fbR" name="Compressor.h" compile="0" resource="0" file="Source/Compressor.h"/>
       <FILE id="Ky1j6x" name="CustomLookAndFeel.h" compile="0" resource="0"
             file="Source/CustomLookAndFeel.h"/>
       <FILE id="Ein0PW" name="CustomLookAndFeel.cpp" compile="1" resource="0"
