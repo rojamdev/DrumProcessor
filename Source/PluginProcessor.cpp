@@ -186,29 +186,27 @@ bool DrumAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) con
 }
 #endif
 
-void DrumAudioProcessor::updateFilters() 
+void DrumAudioProcessor::updateParameters()
 {	
-	float highpassFreq = *tree.getRawParameterValue("highpassCutoff");
-	float lowpassFreq = *tree.getRawParameterValue("lowpassCutoff");
-	float highShelfGain = dBtoRatio(*tree.getRawParameterValue("highShelfGain"));
-	float midCutFreq = *tree.getRawParameterValue("midCutFreq");
+	// Get parameters from tree
+	drive = *tree.getRawParameterValue("drive");
 
-	*highpassFilter.state = *dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, highpassFreq);
-	*lowpassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, lowpassFreq);
-	*highShelf.state = *dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, HI_SHELF_CUTOFF, HI_SHELF_Q, highShelfGain);
-	*midCut.state = *dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, midCutFreq, MID_CUT_Q);
-}
+	highpassFreq = *tree.getRawParameterValue("highpassCutoff");
+	lowpassFreq = *tree.getRawParameterValue("lowpassCutoff");
+	midCutFreq = *tree.getRawParameterValue("midCutFreq");
+	highShelfGain = dBtoRatio(*tree.getRawParameterValue("highShelfGain"));
 
-void DrumAudioProcessor::updateCompressor()
-{
 	threshold = *tree.getRawParameterValue("threshold");
 	ratio = *tree.getRawParameterValue("ratio");
 	attack = *tree.getRawParameterValue("attack");
 	release = *tree.getRawParameterValue("release");
-}
 
-void DrumAudioProcessor::updateNoiseGate()
-{
+	// Assign parameters to FX
+	*highpassFilter.state = *dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, highpassFreq);
+	*lowpassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, lowpassFreq);
+	*midCut.state = *dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, midCutFreq, MID_CUT_Q);
+	*highShelf.state = *dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, HI_SHELF_CUTOFF, HI_SHELF_Q, highShelfGain);
+
 	noiseGate.setThreshold(*tree.getRawParameterValue("gateThresh"));
 	noiseGate.setRelease(*tree.getRawParameterValue("gateRelease"));
 }
@@ -228,24 +226,20 @@ void DrumAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& m
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-	dsp::AudioBlock<float> block(buffer);
+	// Updating parameters
+	updateParameters();
 
-	updateFilters();
-	updateCompressor();
-	updateNoiseGate();
+	attackCoeff = calcCompCoeff(attack);
+	releaseCoeff = calcCompCoeff(release);
+
+	// Processing using DSP module
+	dsp::AudioBlock<float> block(buffer);
 
 	highpassFilter.process(dsp::ProcessContextReplacing<float>(block));
 	lowpassFilter.process(dsp::ProcessContextReplacing<float>(block));
 	highShelf.process(dsp::ProcessContextReplacing<float>(block));
-
-	if (doMidCut == true) midCut.process(dsp::ProcessContextReplacing<float>(block));
-
-	float attackCoeff = calcCompCoeff(attack);
-	float releaseCoeff = calcCompCoeff(release);
-
-	drive = *tree.getRawParameterValue("drive");
-	
 	noiseGate.process(dsp::ProcessContextReplacing<float>(block));
+	if (doMidCut == true) midCut.process(dsp::ProcessContextReplacing<float>(block));
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...

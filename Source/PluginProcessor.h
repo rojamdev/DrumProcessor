@@ -52,32 +52,32 @@ public:
     float drive;
 	double rawVolume;
 	bool doMidCut = false;
+
+    float highpassFreq, lowpassFreq, midCutFreq, highShelfGain;
+    float threshold, ratio, attack, release;
+    float attackCoeff, releaseCoeff;
+
+    // Declares a processor that can be duplicated across two channels for stereo processing
+    dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>>
+        highpassFilter,
+        lowpassFilter,
+        highShelf,
+        midCut;
+
+    dsp::NoiseGate<float> noiseGate; // TODO: Use ProcessorDuplicator to process stereo
+
+    Compressor compressor; // TODO: Make an array of compressors to process stereo
 	
 	AudioProcessorValueTreeState tree;
 
 private:
-    void updateFilters();
-    void updateCompressor();
-    void updateNoiseGate();
+    void updateParameters();
     
     inline float calcCompCoeff(float compControl)
     {
         return (1 - std::pow(MathConstants<float>::euler, 
             ((1 / getSampleRate()) * -2.2f) / (compControl / 1000.0f)));
     }
-
-    float threshold, ratio, attack, release;
-
-	// Declares a processor that can be duplicated across two channels for stereo processing
-	dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>>
-		highpassFilter,
-		lowpassFilter,
-		highShelf,
-		midCut;
-
-	dsp::NoiseGate<float> noiseGate; // TODO: Use ProcessorDuplicator to process stereo
-
-    Compressor compressor; // TODO: Make an array of compressors to process stereo
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumAudioProcessor)

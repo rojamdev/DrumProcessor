@@ -10,7 +10,9 @@ DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (GUI_SIZE_X, GUI_SIZE_Y);
+    
+	// Window
+	setSize (GUI_SIZE_X, GUI_SIZE_Y);
 	setLookAndFeel(&customLookAndFeel);
 	defaultFont.setBold(true);
 
@@ -18,8 +20,8 @@ DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
 	createSlider(gainSlider, GAIN_MIN, GAIN_MAX, GAIN_DEFAULT);
 	createSlider(driveSlider, DRIVE_MIN, DRIVE_MAX, DRIVE_DEFAULT);
 
-	createLabel(gainLabel, "Gain");
-	createLabel(driveLabel, "Drive");
+	createLabel(gainLabel, "Gain", Justification::centred);
+	createLabel(driveLabel, "Drive", Justification::centred);
 
 	// EQ
 	createSlider(highpassSlider, HPF_MIN, HPF_MAX, HPF_DEFAULT);
@@ -27,10 +29,10 @@ DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
 	createSlider(highShelfGainSlider, HI_SHELF_MIN, HI_SHELF_MAX, HI_SHELF_DEFAULT);
 	createSlider(midCutFreqSlider, MID_CUT_MIN, MID_CUT_MAX, MID_CUT_DEFAULT);
 
-	createLabel(highpassLabel, "Highpass");
-	createLabel(lowpassLabel, "Lowpass");
-	createLabel(highShelfGainLabel, "Air");
-	createLabel(midCutFreqLabel, "Midcut");
+	createLabel(highpassLabel, "Highpass", Justification::centred);
+	createLabel(lowpassLabel, "Lowpass", Justification::centred);
+	createLabel(highShelfGainLabel, "Air", Justification::centred);
+	createLabel(midCutFreqLabel, "Midcut", Justification::centred);
 
 	// Compression
 	createSlider(thresholdSlider, COMP_THRESH_MIN, COMP_THRESH_MAX, COMP_THRESH_DEFAULT);
@@ -38,28 +40,23 @@ DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
 	createSlider(attackSlider, COMP_ATTACK_MIN, COMP_ATTACK_MAX, COMP_ATTACK_DEFAULT);
 	createSlider(releaseSlider, COMP_REL_MIN, COMP_REL_MAX, COMP_REL_DEFAULT);
 
-	createLabel(thresholdLabel, "Thresh");
-	createLabel(ratioLabel, "Ratio");
-	createLabel(attackLabel, "Attack");
-	createLabel(releaseLabel, "Release");
+	createLabel(thresholdLabel, "Thresh", Justification::centred);
+	createLabel(ratioLabel, "Ratio", Justification::centred);
+	createLabel(attackLabel, "Attack", Justification::centred);
+	createLabel(releaseLabel, "Release", Justification::centred);
 
 	// Gate
 	createSlider(gateThreshSlider, GATE_THRESH_MIN, GATE_THRESH_MAX, GATE_THRESH_DEFAULT);
 	createSlider(gateReleaseSlider, GATE_REL_MIN, GATE_REL_MAX, GATE_REL_DEFAULT);
 
-	createLabel(gateThreshLabel, "Thresh");
-	createLabel(gateReleaseLabel, "Release");
+	createLabel(gateThreshLabel, "Thresh", Justification::centred);
+	createLabel(gateReleaseLabel, "Release", Justification::centred);
 
 	// Group labels
-	createLabel(eqLabel, "EQ");
-	createLabel(gateLabel, "GATE");
-	createLabel(compLabel, "COMP");
-	createLabel(utilityLabel, "GAIN");
-
-	eqLabel.setJustificationType(Justification::verticallyCentred);
-	gateLabel.setJustificationType(Justification::verticallyCentred);
-	compLabel.setJustificationType(Justification::verticallyCentred);
-	utilityLabel.setJustificationType(Justification::verticallyCentred);
+	createLabel(eqLabel, "EQ", Justification::verticallyCentred);
+	createLabel(gateLabel, "GATE", Justification::verticallyCentred);
+	createLabel(compLabel, "COMP", Justification::verticallyCentred);
+	createLabel(utilityLabel, "GAIN", Justification::verticallyCentred);
 
 	// Tree parameters
 	driveValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, DRIVE_ID, driveSlider);
@@ -92,7 +89,6 @@ DrumAudioProcessorEditor::~DrumAudioProcessorEditor()
 void DrumAudioProcessorEditor::sliderValueChanged(Slider *slider) 
 //TODO: CHANGE THIS INTO A TREE SLIDER ATTACHMENT LIKE OTHER SLIDERS
 {
-	//if (slider == &gainSlider) processor.rawVolume = pow(10, gainSlider.getValue() / 20);
 	if (slider == &gainSlider)
 	{
 		processor.rawVolume = processor.dBtoRatio(gainSlider.getValue());
@@ -117,12 +113,12 @@ void DrumAudioProcessorEditor::setSliderColours(Slider& slider, Colour mainColou
 	slider.setColour(Slider::rotarySliderFillColourId, fillColour);
 }
 
-void DrumAudioProcessorEditor::createLabel(Label& label, String text)
+void DrumAudioProcessorEditor::createLabel(Label& label, String text, Justification justification)
 {
 	addAndMakeVisible(label);
 	label.setFont(defaultFont);
 	label.setText(text, dontSendNotification);
-	label.setJustificationType(Justification::centred);
+	label.setJustificationType(justification);
 	label.setColour(Label::backgroundColourId, Colours::black);
 }
 
@@ -226,4 +222,3 @@ void DrumAudioProcessorEditor::resized()
 	compLabel.setBounds(360.0f, 60.0f + knobPosY * 2, 50, 20);
 	utilityLabel.setBounds(360.0f, 60.0f + knobPosY * 3, 50, 20);
 }
-

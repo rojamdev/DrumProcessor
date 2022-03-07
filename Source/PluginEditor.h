@@ -19,7 +19,7 @@ public:
 	void sliderValueChanged(Slider *slider) override;
 	void createSlider(Slider& slider, float min, float max, float value);
 	void setSliderColours(Slider& slider, Colour mainColour, Colour outlineColour, Colour fillColour);
-	void createLabel(Label& label, String text);
+	void createLabel(Label& label, String text, Justification justification);
 	void buttonClicked(Button* button) override;
 
 private:
@@ -39,7 +39,6 @@ private:
 	
 	// Compression
 	Slider thresholdSlider, ratioSlider, attackSlider, releaseSlider;
-
 	Label thresholdLabel, ratioLabel, attackLabel, releaseLabel;
 
 	// Noise Gate
@@ -50,8 +49,10 @@ private:
 	Label eqLabel, gateLabel, compLabel, utilityLabel; 
 
 	// Tree slider attachments
-	ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> driveValue, highpassValue, lowpassValue, highShelfGainValue, 
-		midCutFreqValue, thresholdValue, ratioValue, attackValue, releaseValue, gateThreshValue, gateReleaseValue;
+	ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> 
+		driveValue, highpassValue, lowpassValue, highShelfGainValue, 
+		midCutFreqValue, thresholdValue, ratioValue, attackValue, 
+		releaseValue, gateThreshValue, gateReleaseValue;
 
 	CustomLookAndFeel customLookAndFeel;
 	Font defaultFont;
