@@ -20,12 +20,13 @@ DrumAudioProcessor::DrumAudioProcessor()
 	tree(*this, nullptr),
 	highpassFilter(dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, HPF_DEFAULT, HPF_Q)), 
 	lowpassFilter(dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, LPF_DEFAULT, LPF_Q)),
-	highShelf(dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, HI_SHELF_CUTOFF, HI_SHELF_Q, 1.0f)), //TODO: Use dBtoRatio for 1.0f
+	highShelf(dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, HI_SHELF_CUTOFF, HI_SHELF_Q, dBtoRatio(HI_SHELF_DEFAULT))),
 	midCut(dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, MID_CUT_DEFAULT, MID_CUT_Q)),
 	noiseGate()
 {
 	// UTILITY
 	NormalisableRange<float>
+		gainRange(GAIN_MIN, GAIN_MAX, SLIDER_INTERVAL),
 		driveRange(DRIVE_MIN, DRIVE_MAX, SLIDER_INTERVAL),
 		highpassCutoffRange(HPF_MIN, HPF_MAX, SLIDER_INTERVAL),
 		lowpassCutoffRange(LPF_MIN, LPF_MAX, SLIDER_INTERVAL),
@@ -46,7 +47,8 @@ DrumAudioProcessor::DrumAudioProcessor()
 	releaseRange.setSkewForCentre(COMP_REL_CENTRE);
 	gateReleaseRange.setSkewForCentre(GATE_REL_CENTRE);
 
-	tree.createAndAddParameter(DRIVE_ID, "Drive", "drive", driveRange, DRIVE_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(GAIN_ID, "Gain", "dB", gainRange, GAIN_DEFAULT, nullptr, nullptr);
+	tree.createAndAddParameter(DRIVE_ID, "Drive", "dB", driveRange, DRIVE_DEFAULT, nullptr, nullptr);
 	tree.createAndAddParameter(HPF_ID, "HighpassCutoff", "Hz", highpassCutoffRange, HPF_DEFAULT, nullptr, nullptr);
 	tree.createAndAddParameter(LPF_ID, "LowpassCutoff", "Hz", lowpassCutoffRange, LPF_DEFAULT, nullptr, nullptr);
 	tree.createAndAddParameter(HI_SHELF_ID, "HighShelfGain", "dB", highShelfGainRange, HI_SHELF_DEFAULT, nullptr, nullptr);
@@ -132,7 +134,6 @@ void DrumAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
 
 	lastSampleRate = sampleRate;
-	rawVolume = 1.0f;
 
 	// DSP
 	dsp::ProcessSpec spec;
@@ -140,20 +141,19 @@ void DrumAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 	spec.maximumBlockSize = samplesPerBlock;
 	spec.numChannels = getMainBusNumOutputChannels();
 
-	// EQ
-	highpassFilter.prepare(spec);
-	highpassFilter.reset();
-	lowpassFilter.prepare(spec);
-	lowpassFilter.reset();
-	highShelf.prepare(spec);
-	highShelf.reset();
-	midCut.prepare(spec);
-	midCut.reset();
-
-	// Noise Gate
-	noiseGate.prepare(spec);
-	noiseGate.reset();
 	noiseGate.setRatio(GATE_RATIO);
+
+	highpassFilter.prepare(spec);
+	lowpassFilter.prepare(spec);
+	highShelf.prepare(spec);
+	midCut.prepare(spec);
+	noiseGate.prepare(spec);
+
+	highpassFilter.reset();
+	lowpassFilter.reset();
+	highShelf.reset();
+	midCut.reset();
+	noiseGate.reset();
 }
 
 void DrumAudioProcessor::releaseResources()
@@ -189,12 +189,13 @@ bool DrumAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) con
 void DrumAudioProcessor::updateParameters()
 {	
 	// Get parameters from tree
-	drive = *tree.getRawParameterValue("drive");
+	gain = dBtoRatio(*tree.getRawParameterValue("gain"));
+	drive = dBtoRatio(*tree.getRawParameterValue("drive"));
+	highShelfGain = dBtoRatio(*tree.getRawParameterValue("highShelfGain"));
 
 	highpassFreq = *tree.getRawParameterValue("highpassCutoff");
 	lowpassFreq = *tree.getRawParameterValue("lowpassCutoff");
 	midCutFreq = *tree.getRawParameterValue("midCutFreq");
-	highShelfGain = dBtoRatio(*tree.getRawParameterValue("highShelfGain"));
 
 	threshold = *tree.getRawParameterValue("threshold");
 	ratio = *tree.getRawParameterValue("ratio");
@@ -256,8 +257,8 @@ void DrumAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& m
 			
 			channelData[sample] = buffer.getSample(channel, sample);
 			channelData[sample] = compressor.compressSample(channelData[sample], threshold, ratio, attackCoeff, releaseCoeff);
+			channelData[sample] *= gain;
 			channelData[sample] = atan(drive * channelData[sample]) / drive;
-			channelData[sample] *= rawVolume;
 		}
 	}
 }

@@ -1,6 +1,5 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include <iostream>
 
 using namespace constants;
 
@@ -59,6 +58,7 @@ DrumAudioProcessorEditor::DrumAudioProcessorEditor (DrumAudioProcessor& p)
 	createLabel(utilityLabel, "GAIN", Justification::verticallyCentred);
 
 	// Tree parameters
+	gainValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, GAIN_ID, gainSlider);
 	driveValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, DRIVE_ID, driveSlider);
 	
 	highpassValue = new AudioProcessorValueTreeState::SliderAttachment(processor.tree, HPF_ID, highpassSlider);
@@ -86,12 +86,12 @@ DrumAudioProcessorEditor::~DrumAudioProcessorEditor()
 }
 
 // MY FUNCTIONS ================================================================
-void DrumAudioProcessorEditor::sliderValueChanged(Slider *slider) 
-//TODO: CHANGE THIS INTO A TREE SLIDER ATTACHMENT LIKE OTHER SLIDERS
+
+void DrumAudioProcessorEditor::sliderValueChanged(Slider* slider)
 {
 	if (slider == &gainSlider)
 	{
-		processor.rawVolume = processor.dBtoRatio(gainSlider.getValue());
+		processor.dBtoRatio(gainSlider.getValue());
 	}
 }
 
@@ -167,11 +167,13 @@ void DrumAudioProcessorEditor::resized()
 	// This is generally where you'll want to lay out the positions of any
 	// subcomponents in your editor..
 
+	//TODO: Clean up this section using more constants (perhaps using an enum)
+
 	const int
 		knobSize = 90,
 		knobPosX = 90,
 		knobPosY = 140,
-	
+
 		shiftX = 5,
 		shiftY = 10,
 

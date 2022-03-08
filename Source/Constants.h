@@ -24,11 +24,9 @@ namespace constants
         GAIN_MAX = 12.0f,
         GAIN_DEFAULT = 0.0f,
 
-        // TODO: Make the drive use dB logarithmic scale 
-        // instead of the plain ratio
-        DRIVE_MIN = 1.0f,
-        DRIVE_MAX = 100.0f,
-        DRIVE_DEFAULT = 1.0f,
+        DRIVE_MIN = 0.0f,
+        DRIVE_MAX = 24.0f,
+        DRIVE_DEFAULT = 0.0f,
 
         HPF_MIN = 20.0f,
         HPF_MAX = 20000.0f,
@@ -86,6 +84,7 @@ namespace constants
 
 
     const juce::String
+        GAIN_ID = "gain",
         DRIVE_ID = "drive",
 
         HPF_ID = "highpassCutoff",

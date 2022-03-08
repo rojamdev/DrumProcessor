@@ -46,11 +46,11 @@ private:
 	Label gateThreshLabel, gateReleaseLabel;
 
 	// Group labels
-	Label eqLabel, gateLabel, compLabel, utilityLabel; 
+	Label eqLabel, gateLabel, compLabel, utilityLabel;
 
 	// Tree slider attachments
 	ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> 
-		driveValue, highpassValue, lowpassValue, highShelfGainValue, 
+		gainValue, driveValue, highpassValue, lowpassValue, highShelfGainValue, 
 		midCutFreqValue, thresholdValue, ratioValue, attackValue, 
 		releaseValue, gateThreshValue, gateReleaseValue;
 
